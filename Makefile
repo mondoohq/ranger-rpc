@@ -1,11 +1,13 @@
 .PHONY: install
 install:
 	go install ./protoc-gen-rangerrpc
+	go install ./protoc-gen-rangerrpc-swagger
 
 .PHONY: generate/examples
 generate/examples:
 	go generate ./examples/pingpong
 	go generate ./examples/oneof
+	go generate ./examples/swagger
 
 .PHONY: run/example/server
 run/example/server: install generate/examples

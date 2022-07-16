@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package swagger;
+
+option go_package = "go.mondoo.com/ranger-rpc/example/swagger";
+
+// This example service adds, list and deletes items
+service ExampleService {
+  // Add an item
+  rpc Add(AddRequest) returns (AddResponse);
+
+  // Delete an added item
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // List all items
+  rpc List(ListRequest) returns (ListResponse);
+
+  // Stats for APM dispatch
+  rpc Statistics(StatsRequest) returns (StatsResponse);
+}
+
+// This is a status request
+message StatsRequest {
+  reserved 2, 15, 9 to 11, 40 to max;
+  reserved "FOO", "BAR";
+}
+
+message StatsResponse {
+  // number of items included in the store
+  int64 items = 1;
+  // number of used items
+  int64 used = 2;
+  // list of request failures
+  int64 failures = 3;
+}
+
+message AddRequest {
+  string payload = 1;
+  int32 userID = 2;
+}
+
+message AddResponse {
+  bool successful = 1;
+}
+
+message DeleteRequest {
+  string targetURL = 1;
+  string payload = 2;
+}
+
+message DeleteResponse {
+ bool successful = 1;
+}
+
+message ListRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+
+message ListResponse {
+  repeated Result results = 1;
+  map<string, User> users = 2;
+}
+
+message Result {
+  string url = 1;
+  string title = 2;
+  repeated string snippets = 3;
+}
+
+message User {
+  int32 uid = 1;
+  string name = 2;
+}
