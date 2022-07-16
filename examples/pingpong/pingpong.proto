@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package pingpong;
+option go_package = "go.mondoo.com/ranger-rpc/example/pingpong";
+
+message Empty {}
+
+message PingRequest {
+  string sender = 1;
+}
+
+message PongReply {
+  string message = 1;
+}
+
+service PingPong {
+  rpc Ping (PingRequest) returns (PongReply);
+  rpc NoPing(Empty) returns (PongReply);
+}
