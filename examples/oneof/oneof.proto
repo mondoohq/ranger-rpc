@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package oneof;
+option go_package = "go.mondoo.com/ranger-rpc/example/oneof";
+
+message OneOfRequest {
+  oneof options {
+    string text = 1;
+    int64 number = 2;
+  }
+}
+
+message OneOfReply {
+  oneof options {
+    string text = 1;
+    int64 number = 2;
+  }
+}
+
+service OneOf {
+  rpc Echo (OneOfRequest) returns (OneOfReply);
+}

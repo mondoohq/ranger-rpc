@@ -5,6 +5,7 @@ install:
 .PHONY: generate/examples
 generate/examples:
 	go generate ./examples/pingpong
+	go generate ./examples/oneof
 
 .PHONY: run/example/server
 run/example/server: install generate/examples
