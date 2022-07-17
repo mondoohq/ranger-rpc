@@ -1,0 +1,107 @@
+{{- $root := . }}
+{{- $service := .Service }}
+{{- $servicedesciptor := .Service.Descriptor }}
+// service interface definition
+
+type {{$servicedesciptor.Name}} interface {
+	{{- range $idx, $m := $service.Methods }}
+	{{$m.Name.String}}(context.Context, *{{ gotype $root.Pkg .Input }}) (*{{ gotype $root.Pkg .Output }}, error)
+	{{- end }}
+}
+
+// client implementation
+
+type {{$servicedesciptor.Name}}Client struct {
+	ranger.Client
+	httpclient ranger.HTTPClient
+	prefix string
+}
+
+func New{{$servicedesciptor.Name}}Client(addr string, client ranger.HTTPClient) (*{{$service.Name}}Client, error) {
+	base, err := url.Parse(ranger.SanitizeUrl(addr))
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := url.Parse("./{{$servicedesciptor.Name}}")
+	if err != nil {
+		return nil, err
+	}
+
+	return &{{$service.Name}}Client{
+		httpclient: client,
+		prefix: base.ResolveReference(u).String(),
+	}, nil
+}
+
+{{- range $idx, $m := $service.Methods }}
+func (c *{{$service.Name}}Client) {{.Name}}(ctx context.Context, in *{{ gotype $root.Pkg .Input }}) (*{{ gotype $root.Pkg .Output }}, error) {
+	out := new({{ gotype $root.Pkg .Output }})
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/{{.Name}}"}, ""), in, out)
+	return out, err
+}
+
+{{- end }}
+
+// server implementation
+
+type {{$servicedesciptor.Name}}ServerOption func(s *{{$servicedesciptor.Name}}Server)
+
+func WithUnknownFieldsFor{{$servicedesciptor.Name}}Server() {{$servicedesciptor.Name}}ServerOption {
+	return func(s *{{$servicedesciptor.Name}}Server) {
+		s.allowUnknownFields = true
+	}
+}
+
+func New{{$servicedesciptor.Name}}Server(handler {{$servicedesciptor.Name}}, opts ...{{$servicedesciptor.Name}}ServerOption) http.Handler {
+	srv := &{{$servicedesciptor.Name}}Server{
+		handler: handler,
+	}
+
+	for i := range opts {
+		opts[i](srv)
+	}
+
+	service := ranger.Service{
+		Name: "{{$servicedesciptor.Name}}",
+		Methods: map[string]ranger.Method{
+			{{- range $idx, $m := $service.Methods }}
+			"{{.Name}}":   srv.{{.Name}},
+			{{- end }}
+		},
+	}
+	return ranger.NewRPCServer(&service)
+}
+
+type {{$servicedesciptor.Name}}Server struct {
+	handler {{$servicedesciptor.Name}}
+	allowUnknownFields bool
+}
+
+{{- range $idx, $m := $service.Methods }}
+func (p *{{$servicedesciptor.Name}}Server) {{.Name}}(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req {{ gotype $root.Pkg .Input }}
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.{{.Name}}(ctx, &req)
+}
+
+{{- end }}
