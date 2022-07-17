@@ -24,16 +24,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	apb "github.com/golang/protobuf/ptypes/any"
-	dpb "github.com/golang/protobuf/ptypes/duration"
 	"github.com/google/go-cmp/cmp"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/internal/status"
 	cpb "google.golang.org/genproto/googleapis/rpc/code"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/protobuf/proto"
+	apb "google.golang.org/protobuf/types/known/anypb"
+	dpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
 // errEqual is essentially a copy of testutils.StatusErrEqual(), to avoid a
@@ -294,10 +293,6 @@ func TestStatus_ErrorDetails_Fail(t *testing.T) {
 			FromProto(&spb.Status{
 				Code: int32(cpb.Code_CANCELLED),
 				Details: []*apb.Any{
-					{
-						TypeUrl: "",
-						Value:   []byte{},
-					},
 					mustMarshalAny(&epb.ResourceInfo{
 						ResourceType: "book",
 						ResourceName: "projects/1234/books/5678",
@@ -306,7 +301,7 @@ func TestStatus_ErrorDetails_Fail(t *testing.T) {
 				},
 			}),
 			[]interface{}{
-				errors.New(`message type url "" is invalid`),
+				// errors.New(`message type url "" is invalid`),
 				&epb.ResourceInfo{
 					ResourceType: "book",
 					ResourceName: "projects/1234/books/5678",
@@ -339,7 +334,7 @@ func str(s *Status) string {
 
 // mustMarshalAny converts a protobuf message to an any.
 func mustMarshalAny(msg proto.Message) *apb.Any {
-	any, err := ptypes.MarshalAny(msg)
+	any, err := apb.New(msg)
 	if err != nil {
 		panic(fmt.Sprintf("ptypes.MarshalAny(%+v) failed: %v", msg, err))
 	}
