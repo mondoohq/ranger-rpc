@@ -3,6 +3,9 @@ install:
 	go install ./protoc-gen-rangerrpc
 	go install ./protoc-gen-rangerrpc-swagger
 
+prep:
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+
 .PHONY: generate/examples
 generate/examples:
 	go generate ./examples/pingpong
@@ -21,3 +24,4 @@ run/example/client: generate/examples
 test:
 	go test ./...
 	go vet ./...
+	staticcheck ./...
