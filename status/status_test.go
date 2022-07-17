@@ -24,17 +24,16 @@ import (
 	"fmt"
 	"testing"
 
-	"google.golang.org/protobuf/types/known/anypb"
-
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	apb "github.com/golang/protobuf/ptypes/any"
 	dpb "github.com/golang/protobuf/ptypes/duration"
 	"github.com/google/go-cmp/cmp"
 	"go.mondoo.com/ranger-rpc/codes"
-	status "go.mondoo.com/ranger-rpc/status/internal"
+	"go.mondoo.com/ranger-rpc/internal/status"
 	cpb "google.golang.org/genproto/googleapis/rpc/code"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 // errEqual is essentially a copy of testutils.StatusErrEqual(), to avoid a
@@ -340,7 +339,7 @@ func str(s *Status) string {
 
 // mustMarshalAny converts a protobuf message to an any.
 func mustMarshalAny(msg proto.Message) *apb.Any {
-	any, err := anypb.New(msg)
+	any, err := ptypes.MarshalAny(msg)
 	if err != nil {
 		panic(fmt.Sprintf("ptypes.MarshalAny(%+v) failed: %v", msg, err))
 	}
@@ -356,6 +355,8 @@ func TestFromContextError(t *testing.T) {
 		{in: context.DeadlineExceeded, want: New(codes.DeadlineExceeded, context.DeadlineExceeded.Error())},
 		{in: context.Canceled, want: New(codes.Canceled, context.Canceled.Error())},
 		{in: errors.New("other"), want: New(codes.Unknown, "other")},
+		{in: fmt.Errorf("wrapped: %w", context.DeadlineExceeded), want: New(codes.DeadlineExceeded, "wrapped: "+context.DeadlineExceeded.Error())},
+		{in: fmt.Errorf("wrapped: %w", context.Canceled), want: New(codes.Canceled, "wrapped: "+context.Canceled.Error())},
 	}
 	for _, tc := range testCases {
 		got := FromContextError(tc.in)
