@@ -13,3 +13,8 @@ run/example/server: install generate/examples
 .PHONY: run/example/client
 run/example/client: generate/examples
 	go run examples/pingpong/client/main.go
+
+.PHONY: test
+test:
+	go test ./...
+	go vet ./...
