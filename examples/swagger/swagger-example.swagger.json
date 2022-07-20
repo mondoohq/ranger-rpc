@@ -1,0 +1,230 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "swagger-example.proto",
+    "version": "1.0"
+  },
+  "paths": {
+    "/ExampleService/Add": {
+      "post": {
+        "description": "Add an item",
+        "summary": "Add an item",
+        "operationId": "Add",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.AddRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.AddResponse"
+            }
+          }
+        }
+      }
+    },
+    "/ExampleService/Delete": {
+      "post": {
+        "description": "Delete an added item",
+        "summary": "Delete an added item",
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.DeleteRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.DeleteResponse"
+            }
+          }
+        }
+      }
+    },
+    "/ExampleService/List": {
+      "post": {
+        "description": "List all items",
+        "summary": "List all items",
+        "operationId": "List",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.ListRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.ListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/ExampleService/Statistics": {
+      "post": {
+        "description": "Stats for APM dispatch",
+        "summary": "Stats for APM dispatch",
+        "operationId": "Statistics",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.StatsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/swagger.ExampleService.StatsResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "swagger.ExampleService.AddRequest": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "type": "string",
+          "title": "payload"
+        },
+        "userID": {
+          "type": "integer",
+          "format": "int32",
+          "title": "userID"
+        }
+      }
+    },
+    "swagger.ExampleService.AddResponse": {
+      "type": "object",
+      "properties": {
+        "successful": {
+          "type": "boolean",
+          "title": "successful"
+        }
+      }
+    },
+    "swagger.ExampleService.DeleteRequest": {
+      "type": "object",
+      "properties": {
+        "payload": {
+          "type": "string",
+          "title": "payload"
+        },
+        "targetURL": {
+          "type": "string",
+          "title": "targetURL"
+        }
+      }
+    },
+    "swagger.ExampleService.DeleteResponse": {
+      "type": "object",
+      "properties": {
+        "successful": {
+          "type": "boolean",
+          "title": "successful"
+        }
+      }
+    },
+    "swagger.ExampleService.ListRequest": {
+      "type": "object",
+      "properties": {
+        "corpus": {
+          "type": "string",
+          "title": "corpus"
+        },
+        "page_number": {
+          "type": "integer",
+          "format": "int32",
+          "title": "page_number"
+        },
+        "query": {
+          "type": "string",
+          "title": "query"
+        },
+        "result_per_page": {
+          "type": "integer",
+          "format": "int32",
+          "title": "result_per_page"
+        }
+      }
+    },
+    "swagger.ExampleService.ListResponse": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "object",
+          "title": "results"
+        },
+        "users": {
+          "type": "object",
+          "title": "users"
+        }
+      }
+    },
+    "swagger.ExampleService.StatsRequest": {
+      "description": "This is a status request",
+      "type": "object",
+      "title": "This is a status request"
+    },
+    "swagger.ExampleService.StatsResponse": {
+      "type": "object",
+      "properties": {
+        "failures": {
+          "description": "list of request failures",
+          "type": "integer",
+          "format": "int64",
+          "title": "failures"
+        },
+        "items": {
+          "description": "number of items included in the store",
+          "type": "integer",
+          "format": "int64",
+          "title": "items"
+        },
+        "used": {
+          "description": "number of used items",
+          "type": "integer",
+          "format": "int64",
+          "title": "used"
+        }
+      }
+    }
+  }
+}
