@@ -19,7 +19,6 @@ import (
 	"go.mondoo.com/ranger-rpc/metadata"
 	"go.mondoo.com/ranger-rpc/status"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
-	"google.golang.org/protobuf/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -122,7 +121,7 @@ func parseStatus(reader io.Reader) (*spb.Status, error) {
 		return nil, err
 	}
 	var status spb.Status
-	err = proto.Unmarshal(payload, &status)
+	err = pb.Unmarshal(payload, &status)
 	if err != nil {
 		return nil, err
 	}

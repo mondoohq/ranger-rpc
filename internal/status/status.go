@@ -31,11 +31,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/golang/protobuf/ptypes"
 	"go.mondoo.com/ranger-rpc/codes"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/protobuf/proto"
-	anypb "google.golang.org/protobuf/types/known/anypb"
+	apb "google.golang.org/protobuf/types/known/anypb"
 )
 
 // Status represents an RPC status code, message, and details.  It is immutable
@@ -98,7 +97,7 @@ func (s *Status) Err() error {
 	if s.Code() == codes.OK {
 		return nil
 	}
-	return &Error{e: s.Proto()}
+	return &Error{s: s}
 }
 
 // WithDetails returns a new status with the provided details messages appended to the status.
@@ -110,7 +109,7 @@ func (s *Status) WithDetails(details ...proto.Message) (*Status, error) {
 	// s.Code() != OK implies that s.Proto() != nil.
 	p := s.Proto()
 	for _, detail := range details {
-		any, err := anypb.New(detail)
+		any, err := apb.New(detail)
 		if err != nil {
 			return nil, err
 		}
@@ -127,29 +126,32 @@ func (s *Status) Details() []interface{} {
 	}
 	details := make([]interface{}, 0, len(s.s.Details))
 	for _, any := range s.s.Details {
-		detail := &ptypes.DynamicAny{}
-		if err := ptypes.UnmarshalAny(any, detail); err != nil {
-			details = append(details, err)
+		m, err := any.UnmarshalNew()
+		if err != nil {
 			continue
 		}
-		details = append(details, detail.Message)
+		details = append(details, m)
 	}
 	return details
+}
+
+func (s *Status) String() string {
+	return fmt.Sprintf("rpc error: code = %s desc = %s", s.Code(), s.Message())
 }
 
 // Error wraps a pointer of a status proto. It implements error and Status,
 // and a nil *Error should never be returned by this package.
 type Error struct {
-	e *spb.Status
+	s *Status
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("rpc error: code = %s desc = %s", codes.Code(e.e.GetCode()), e.e.GetMessage())
+	return e.s.String()
 }
 
 // GRPCStatus returns the Status represented by se.
 func (e *Error) GRPCStatus() *Status {
-	return FromProto(e.e)
+	return e.s
 }
 
 // Is implements future error.Is functionality.
@@ -159,5 +161,5 @@ func (e *Error) Is(target error) bool {
 	if !ok {
 		return false
 	}
-	return proto.Equal(e.e, tse.e)
+	return proto.Equal(e.s.s, tse.s.s)
 }

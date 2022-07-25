@@ -6,8 +6,6 @@ import (
 	"go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc/generator"
 )
 
-var version string
-
 func main() {
 	pgs.Init(
 		pgs.DebugEnv("DEBUG"),

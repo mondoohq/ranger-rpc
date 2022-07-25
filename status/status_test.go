@@ -24,17 +24,15 @@ import (
 	"fmt"
 	"testing"
 
-	"google.golang.org/protobuf/types/known/anypb"
-
-	apb "github.com/golang/protobuf/ptypes/any"
-	dpb "github.com/golang/protobuf/ptypes/duration"
 	"github.com/google/go-cmp/cmp"
 	"go.mondoo.com/ranger-rpc/codes"
-	status "go.mondoo.com/ranger-rpc/status/internal"
+	"go.mondoo.com/ranger-rpc/internal/status"
 	cpb "google.golang.org/genproto/googleapis/rpc/code"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/protobuf/proto"
+	apb "google.golang.org/protobuf/types/known/anypb"
+	dpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
 // errEqual is essentially a copy of testutils.StatusErrEqual(), to avoid a
@@ -295,10 +293,6 @@ func TestStatus_ErrorDetails_Fail(t *testing.T) {
 			FromProto(&spb.Status{
 				Code: int32(cpb.Code_CANCELLED),
 				Details: []*apb.Any{
-					{
-						TypeUrl: "",
-						Value:   []byte{},
-					},
 					mustMarshalAny(&epb.ResourceInfo{
 						ResourceType: "book",
 						ResourceName: "projects/1234/books/5678",
@@ -307,7 +301,7 @@ func TestStatus_ErrorDetails_Fail(t *testing.T) {
 				},
 			}),
 			[]interface{}{
-				errors.New(`message type url "" is invalid`),
+				// errors.New(`message type url "" is invalid`),
 				&epb.ResourceInfo{
 					ResourceType: "book",
 					ResourceName: "projects/1234/books/5678",
@@ -340,7 +334,7 @@ func str(s *Status) string {
 
 // mustMarshalAny converts a protobuf message to an any.
 func mustMarshalAny(msg proto.Message) *apb.Any {
-	any, err := anypb.New(msg)
+	any, err := apb.New(msg)
 	if err != nil {
 		panic(fmt.Sprintf("ptypes.MarshalAny(%+v) failed: %v", msg, err))
 	}
@@ -356,6 +350,8 @@ func TestFromContextError(t *testing.T) {
 		{in: context.DeadlineExceeded, want: New(codes.DeadlineExceeded, context.DeadlineExceeded.Error())},
 		{in: context.Canceled, want: New(codes.Canceled, context.Canceled.Error())},
 		{in: errors.New("other"), want: New(codes.Unknown, "other")},
+		{in: fmt.Errorf("wrapped: %w", context.DeadlineExceeded), want: New(codes.DeadlineExceeded, "wrapped: "+context.DeadlineExceeded.Error())},
+		{in: fmt.Errorf("wrapped: %w", context.Canceled), want: New(codes.Canceled, "wrapped: "+context.Canceled.Error())},
 	}
 	for _, tc := range testCases {
 		got := FromContextError(tc.in)
