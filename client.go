@@ -3,13 +3,16 @@ package ranger
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/protobuf/proto"
+	"moul.io/http2curl"
 )
 
 // Client is the client for the Ranger service. It is used as the base client for all service calls.
@@ -44,6 +47,11 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 	}
 	req = req.WithContext(ctx)
 	req.Header = header
+
+	// trace curl request
+	if log.Trace().Enabled() {
+		c.PrintTraceCurlCommand(url, in)
+	}
 
 	// do http call
 	resp, err := client.Do(req)
@@ -89,4 +97,29 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 		return errors.Wrap(err, "failed to unmarshal proto response")
 	}
 	return nil
+}
+
+func (c *Client) PrintTraceCurlCommand(url string, in proto.Message) {
+	// for better debuggability we try to construct an equivalent json request
+	jsonBytes, err := json.Marshal(in)
+	if err != nil {
+		log.Error().Err(err).Msg("could not generate trace http log")
+	}
+
+	header := make(http.Header)
+	header.Set("Accept", "application/json")
+	header.Set("Content-Type", "application/json")
+	header.Set("Content-Length", strconv.Itoa(len(jsonBytes)))
+
+	// create http request
+	reader := bytes.NewReader(jsonBytes)
+	req, err := http.NewRequest("POST", url, reader)
+	if err != nil {
+		return
+	}
+	req.Header = header
+
+	// convert request to curl command
+	command, _ := http2curl.GetCurlCommand(req)
+	log.Trace().Msg(command.String())
 }

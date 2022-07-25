@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/zerolog"
 	"go.mondoo.com/ranger-rpc/examples/pingpong"
 )
 
 func main() {
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	fmt.Println("start pingpong example client")
 	client, err := pingpong.NewPingPongClient("http://localhost:2155/api/", &http.Client{
 		Timeout: time.Second * 10,
