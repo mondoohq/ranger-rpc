@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package mondoo.ranger.twirpbench;
+option go_package = "go.mondoo.com/ranger-rpc/benchmark/twirpbench";
+
+service BenchmarkService {
+	rpc RpcSmall(SmallQuery) returns (SmallResponse) {}
+	rpc RpcEmpty(Empty) returns (DefaultResponse) {}
+}
+
+message SmallQuery {
+	int64 id = 1;
+	string message = 2;
+	repeated string name = 3;
+}
+
+message SmallResponse {
+	int64 id = 1;
+	string message = 2;
+	repeated string name = 3;
+}
+
+message Empty {}
+
+message DefaultResponse {
+	string message = 1;
+}

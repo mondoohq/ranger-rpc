@@ -39,7 +39,6 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 	header.Set("Accept", "application/protobuf")
 	header.Set("Content-Type", "application/protobuf")
 
-	log.Debug().Str("url", url).Msg("call service")
 	reader := bytes.NewReader(reqBodyBytes)
 	req, err := http.NewRequest("POST", url, reader)
 	if err != nil {
