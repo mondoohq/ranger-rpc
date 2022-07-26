@@ -15,8 +15,20 @@ import (
 	"moul.io/http2curl"
 )
 
+// ClientPlugin is a plugin that can be used to modify the http headers of a request.
+type ClientPlugin interface {
+	GetName() string
+	GetHeader(content []byte) http.Header
+}
+
 // Client is the client for the Ranger service. It is used as the base client for all service calls.
-type Client struct{}
+type Client struct {
+	plugins []ClientPlugin
+}
+
+func (c *Client) AddPlugin(plugin ClientPlugin) {
+	c.plugins = append(c.plugins, plugin)
+}
 
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -38,6 +50,15 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 	header := make(http.Header)
 	header.Set("Accept", "application/protobuf")
 	header.Set("Content-Type", "application/protobuf")
+
+	for i := range c.plugins {
+		p := c.plugins[i]
+		pluginHeader := p.GetHeader(reqBodyBytes)
+		for k, v := range pluginHeader {
+			// check if we overwrite an existing header
+			header[k] = v
+		}
+	}
 
 	reader := bytes.NewReader(reqBodyBytes)
 	req, err := http.NewRequest("POST", url, reader)

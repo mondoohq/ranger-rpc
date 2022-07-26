@@ -3,6 +3,7 @@ package ranger_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -239,4 +240,55 @@ func TestRangerStatusCodes(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, codes.InvalidArgument, codes.Code(status.GetCode()), "correct error message")
 	assert.Equal(t, "Value of `Input` is not allowed", status.GetMessage(), "correct error message")
+}
+
+type pingPongHeaderServiceTest struct{}
+
+func (s *pingPongHeaderServiceTest) Ping(ctx context.Context, in *pingpong.PingRequest) (*pingpong.PongReply, error) {
+	msg := "Hello " + in.GetSender()
+	md, _ := metadata.FromIncomingContext(ctx)
+	header := md.Get("Authorization")
+	if len(header) == 1 {
+		msg += " with " + header[0]
+	}
+
+	return &pingpong.PongReply{Message: msg}, nil
+}
+
+func (s *pingPongHeaderServiceTest) NoPing(ctx context.Context, in *pingpong.Empty) (*pingpong.PongReply, error) {
+	return &pingpong.PongReply{Message: "HelloPong"}, nil
+}
+
+func newStaticTokenClientPlugin(token string) ranger.ClientPlugin {
+	return &staticTokenClientPlugin{token: token}
+}
+
+type staticTokenClientPlugin struct {
+	token string
+}
+
+func (scp *staticTokenClientPlugin) GetName() string {
+	return "Static Token Plugin"
+}
+
+func (scp *staticTokenClientPlugin) GetHeader(serialzed []byte) http.Header {
+	header := make(http.Header)
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", scp.token))
+	return header
+}
+
+func TestClientPlugin(t *testing.T) {
+	service := pingPongHeaderServiceTest{}
+	pingPongSrv := pingpong.NewPingPongServer(&service)
+	ts := httptest.NewServer(pingPongSrv)
+	defer ts.Close()
+
+	client, err := pingpong.NewPingPongClient(ts.URL, ts.Client())
+	require.NoError(t, err)
+	client.AddPlugin(newStaticTokenClientPlugin("secret"))
+	resp, err := client.Ping(context.Background(), &pingpong.PingRequest{
+		Sender: "hi",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "Hello hi with Bearer secret", resp.Message, "correct response")
 }
