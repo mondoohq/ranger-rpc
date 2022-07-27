@@ -6,6 +6,9 @@ install:
 prep:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 
+build/snapshot:
+	goreleaser release --snapshot --skip-publish --rm-dist
+
 .PHONY: generate/examples
 generate/examples:
 	go generate ./examples/pingpong
