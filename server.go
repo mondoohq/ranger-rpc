@@ -62,12 +62,12 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// verify content type
 	err := verifyContentType(req, contentType)
 	if err != nil {
-		httpError(w, req, err)
+		HttpError(w, req, err)
 		return
 	}
 
 	if !strings.HasPrefix(req.URL.Path, s.prefix) {
-		httpError(w, req, status.Error(codes.NotFound, req.URL.Path+" is not available"))
+		HttpError(w, req, status.Error(codes.NotFound, req.URL.Path+" is not available"))
 		return
 	}
 
@@ -77,13 +77,13 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	method, ok := s.service.Methods[name]
 	if !ok {
 		err := status.Error(codes.NotFound, "method not defined")
-		httpError(w, req, err)
+		HttpError(w, req, err)
 		return
 	}
 
 	rctx, rcancel, body, err := preProcessRequest(ctx, req)
 	if err != nil {
-		httpError(w, req, err)
+		HttpError(w, req, err)
 		return
 	}
 	defer rcancel()
@@ -91,7 +91,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// invoke method and send the response
 	resp, err := method(rctx, &body)
 	if err != nil {
-		httpError(w, req, err)
+		HttpError(w, req, err)
 		return
 	}
 	// check if the accept header is set, otherwise use the incoming content type
@@ -122,7 +122,7 @@ func preProcessRequest(ctx context.Context, req *http.Request) (context.Context,
 func (s *server) sendResponse(w http.ResponseWriter, req *http.Request, resp proto.Message, contentType string) {
 	payload, contentType, err := convertProtoToPayload(resp, contentType)
 	if err != nil {
-		httpError(w, req, status.Error(codes.Internal, "error encoding response"))
+		HttpError(w, req, status.Error(codes.Internal, "error encoding response"))
 		return
 	}
 

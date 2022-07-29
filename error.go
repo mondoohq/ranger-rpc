@@ -12,8 +12,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// httpError writes an error to the response.
-func httpError(w http.ResponseWriter, req *http.Request, err error) {
+// HttpError writes an error to the response.
+func HttpError(w http.ResponseWriter, req *http.Request, err error) {
 	// check if the accept header is set, otherwise use the incoming content type
 	accept := determineResponseType(req.Header.Get("Content-Type"), req.Header.Get("Accept"))
 
