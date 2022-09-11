@@ -31,7 +31,7 @@ type PingPongClient struct {
 	prefix     string
 }
 
-func NewPingPongClient(addr string, client ranger.HTTPClient) (*PingPongClient, error) {
+func NewPingPongClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*PingPongClient, error) {
 	base, err := url.Parse(ranger.SanitizeUrl(addr))
 	if err != nil {
 		return nil, err
@@ -42,10 +42,12 @@ func NewPingPongClient(addr string, client ranger.HTTPClient) (*PingPongClient, 
 		return nil, err
 	}
 
-	return &PingPongClient{
+	serviceClient := &PingPongClient{
 		httpclient: client,
 		prefix:     base.ResolveReference(u).String(),
-	}, nil
+	}
+	serviceClient.AddPlugin(plugins...)
+	return serviceClient, nil
 }
 func (c *PingPongClient) Ping(ctx context.Context, in *PingRequest) (*PongReply, error) {
 	out := new(PongReply)
