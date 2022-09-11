@@ -1,4 +1,4 @@
-package oneof
+package oneof_test
 
 import (
 	"bytes"
@@ -10,21 +10,23 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/ranger-rpc/examples/oneof"
+	oneof_client "go.mondoo.com/ranger-rpc/examples/oneof/client"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
 )
 
 // custom implementation
 type oneOfServerImpl struct{}
 
-func (s *oneOfServerImpl) Echo(ctx context.Context, in *OneOfRequest) (*OneOfReply, error) {
-	resp := &OneOfReply{}
+func (s *oneOfServerImpl) Echo(ctx context.Context, in *oneof.OneOfRequest) (*oneof.OneOfReply, error) {
+	resp := &oneof.OneOfReply{}
 	if in.GetNumber() != 0 {
-		resp.Options = &OneOfReply_Number{
+		resp.Options = &oneof.OneOfReply_Number{
 			Number: in.GetNumber(),
 		}
 	}
 	if in.GetText() != "" {
-		resp.Options = &OneOfReply_Text{
+		resp.Options = &oneof.OneOfReply_Text{
 			Text: in.GetText(),
 		}
 	}
@@ -33,21 +35,21 @@ func (s *oneOfServerImpl) Echo(ctx context.Context, in *OneOfRequest) (*OneOfRep
 
 func TestOneOf(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.Handle("/api/", http.StripPrefix("/api", NewOneOfServer(&oneOfServerImpl{})))
+	mux.Handle("/api/", http.StripPrefix("/api", oneof.NewOneOfServer(&oneOfServerImpl{})))
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	client, err := NewOneOfClient(server.URL+"/api/", &http.Client{})
+	client, err := oneof.NewOneOfClient(server.URL+"/api/", &http.Client{})
 	assert.Nil(t, err)
 
 	t.Run("Echo text", func(t *testing.T) {
-		resp, err := client.Echo(context.Background(), &OneOfRequest{Options: &OneOfRequest_Text{Text: "Example"}})
+		resp, err := client.Echo(context.Background(), &oneof.OneOfRequest{Options: &oneof.OneOfRequest_Text{Text: "Example"}})
 		require.Nil(t, err)
 		assert.Equal(t, "Example", resp.GetText())
 	})
 
 	t.Run("Echo number", func(t *testing.T) {
-		resp, err := client.Echo(context.Background(), &OneOfRequest{Options: &OneOfRequest_Number{Number: 42}})
+		resp, err := client.Echo(context.Background(), &oneof.OneOfRequest{Options: &oneof.OneOfRequest_Number{Number: 42}})
 		require.Nil(t, err)
 		assert.Equal(t, int64(42), resp.GetNumber())
 	})
@@ -55,7 +57,7 @@ func TestOneOf(t *testing.T) {
 
 func TestOneOfJSON(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.Handle("/", NewOneOfServer(&oneOfServerImpl{}))
+	mux.Handle("/", oneof.NewOneOfServer(&oneOfServerImpl{}))
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -66,7 +68,7 @@ func TestOneOfJSON(t *testing.T) {
 	header.Set("Content-Type", "application/json")
 
 	t.Run("Echo text", func(t *testing.T) {
-		in := &OneOfRequest{Options: &OneOfRequest_Text{Text: "Example"}}
+		in := &oneof.OneOfRequest{Options: &oneof.OneOfRequest_Text{Text: "Example"}}
 		buf, err := jsonpb.Marshal(in)
 		require.Nil(t, err)
 
@@ -81,7 +83,7 @@ func TestOneOfJSON(t *testing.T) {
 		assert.Equal(t, "200 OK", resp.Status)
 
 		// check response
-		r := &OneOfReply{}
+		r := &oneof.OneOfReply{}
 		data, err := ioutil.ReadAll(resp.Body)
 		require.NoError(t, err)
 		err = jsonpb.Unmarshal(data, r)
@@ -90,7 +92,7 @@ func TestOneOfJSON(t *testing.T) {
 	})
 
 	t.Run("Echo number", func(t *testing.T) {
-		in := &OneOfRequest{Options: &OneOfRequest_Number{Number: 42}}
+		in := &oneof.OneOfRequest{Options: &oneof.OneOfRequest_Number{Number: 42}}
 		buf, err := jsonpb.Marshal(in)
 		assert.Nil(t, err)
 
@@ -105,11 +107,33 @@ func TestOneOfJSON(t *testing.T) {
 		assert.Equal(t, "200 OK", resp.Status)
 
 		// check response
-		r := &OneOfReply{}
+		r := &oneof.OneOfReply{}
 		data, err := ioutil.ReadAll(resp.Body)
 		require.NoError(t, err)
 		err = jsonpb.Unmarshal(data, r)
 		assert.Nil(t, err)
 		assert.Equal(t, int64(42), r.GetNumber())
+	})
+}
+
+func TestOneOfExternalClient(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.Handle("/api/", http.StripPrefix("/api", oneof.NewOneOfServer(&oneOfServerImpl{})))
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	client, err := oneof_client.NewOneOfClient(server.URL+"/api/", &http.Client{})
+	assert.Nil(t, err)
+
+	t.Run("Echo text", func(t *testing.T) {
+		resp, err := client.Echo(context.Background(), &oneof_client.OneOfRequest{Options: &oneof_client.OneOfRequest_Text{Text: "Example"}})
+		require.Nil(t, err)
+		assert.Equal(t, "Example", resp.GetText())
+	})
+
+	t.Run("Echo number", func(t *testing.T) {
+		resp, err := client.Echo(context.Background(), &oneof_client.OneOfRequest{Options: &oneof_client.OneOfRequest_Number{Number: 42}})
+		require.Nil(t, err)
+		assert.Equal(t, int64(42), resp.GetNumber())
 	})
 }

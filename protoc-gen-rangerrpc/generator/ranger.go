@@ -11,8 +11,11 @@ import (
 )
 
 var (
-	//go:embed templates/gofile.template
-	embeddedTemplateGofile string
+	//go:embed templates/go_client_server_file.template
+	embeddedTemplateGofileClientServer string
+
+	//go:embed templates/go_client_file.template
+	embeddedTemplateGofileClient string
 
 	//go:embed templates/service_client.template
 	embeddedTemplateServiceClient string
@@ -20,9 +23,10 @@ var (
 	//go:embed templates/service_server.template
 	embeddedTemplateServiceServer string
 
-	templateGoRangerFile    *template.Template
-	templateGoServiceClient *template.Template
-	templateGoServiceServer *template.Template
+	templateGoClientAndServerRangerFile *template.Template
+	templateGoClientRangerFile          *template.Template
+	templateGoServiceClient             *template.Template
+	templateGoServiceServer             *template.Template
 )
 
 func noescape(str string) template.HTML {
@@ -35,16 +39,25 @@ func init() {
 		"gotype":   goMessageType,
 	}
 
-	// load file content
-	templateGoRangerFile = template.New("file")
-	templateGoRangerFile.Funcs(fn)
-	tmpl, err := templateGoRangerFile.Parse(embeddedTemplateGofile)
+	// load go client and server file template content
+	templateGoClientAndServerRangerFile = template.New("file_client_server")
+	templateGoClientAndServerRangerFile.Funcs(fn)
+	tmpl, err := templateGoClientAndServerRangerFile.Parse(embeddedTemplateGofileClientServer)
 	if err != nil {
 		panic(err)
 	}
-	templateGoRangerFile = tmpl
+	templateGoClientAndServerRangerFile = tmpl
 
-	// load service client content
+	// load go client and server file template content
+	templateGoClientRangerFile = template.New("file_client")
+	templateGoClientRangerFile.Funcs(fn)
+	tmpl, err = templateGoClientRangerFile.Parse(embeddedTemplateGofileClient)
+	if err != nil {
+		panic(err)
+	}
+	templateGoClientRangerFile = tmpl
+
+	// load service client template content
 	templateGoServiceClient = template.New("service_client")
 	templateGoServiceClient.Funcs(fn)
 	tmpl, err = templateGoServiceClient.Parse(embeddedTemplateServiceClient)
@@ -53,7 +66,7 @@ func init() {
 	}
 	templateGoServiceClient = tmpl
 
-	// load service server content
+	// load service server template content
 	templateGoServiceServer = template.New("service_server")
 	templateGoServiceServer.Funcs(fn)
 	tmpl, err = templateGoServiceServer.Parse(embeddedTemplateServiceServer)
@@ -76,6 +89,12 @@ func (f *rangerc) Name() string {
 }
 
 func (fc *rangerc) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
+	clientOnly := false
+	v, ok := fc.Parameters()["client-only"]
+	if ok && v == "true" {
+		clientOnly = true
+	}
+
 	for _, f := range targets {
 		ctx := fc.Push(f.Name().String())
 		goctx := pgsgo.InitContext(ctx.Parameters())
@@ -120,17 +139,24 @@ func (fc *rangerc) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Pack
 			fc.CheckErr(err, "unable to render ", service, " client to proto")
 			servicesRendered += serviceClient
 
-			// render service server
-			serviceServer, err := fc.renderServiceServer(goServiceRenderOpts{
-				Pkg:     pkg,
-				Service: service,
-			})
-			fc.CheckErr(err, "unable to render ", service, " server to proto")
-			servicesRendered += serviceServer
+			if !clientOnly {
+				// render service server
+				serviceServer, err := fc.renderServiceServer(goServiceRenderOpts{
+					Pkg:     pkg,
+					Service: service,
+				})
+				fc.CheckErr(err, "unable to render ", service, " server to proto")
+				servicesRendered += serviceServer
+			}
 		}
 
 		// generate complete file, services are included
-		fileContent, err := fc.renderFile(goFileRenderOpts{
+		fileTemplate := templateGoClientAndServerRangerFile
+		if clientOnly {
+			fileTemplate = templateGoClientRangerFile
+		}
+
+		fileContent, err := fc.render(fileTemplate, goFileRenderOpts{
 			Version: "version",
 			Source:  f.Name().String(),
 			Package: pkgname,
@@ -154,10 +180,6 @@ type goFileRenderOpts struct {
 	Package string
 	Service string
 	Imports map[string]bool
-}
-
-func (fc *rangerc) renderFile(renderOpts goFileRenderOpts) (string, error) {
-	return fc.render(templateGoRangerFile, renderOpts)
 }
 
 // those are the input options for the service.templace
