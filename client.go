@@ -26,8 +26,10 @@ type Client struct {
 	plugins []ClientPlugin
 }
 
-func (c *Client) AddPlugin(plugin ClientPlugin) {
-	c.plugins = append(c.plugins, plugin)
+func (c *Client) AddPlugin(plugins ...ClientPlugin) {
+	for i := range plugins {
+		c.plugins = append(c.plugins, plugins[i])
+	}
 }
 
 type HTTPClient interface {
