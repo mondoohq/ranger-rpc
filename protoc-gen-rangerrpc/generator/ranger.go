@@ -18,8 +18,8 @@ var (
 	//go:embed templates/service.template
 	embeddedTemplateService string
 
-	TMP_GOFILE_FILE        *template.Template
-	TMP_SERVICE_DEFINITION *template.Template
+	templateGoRangerFile        *template.Template
+	templateGoServiceDefinition *template.Template
 )
 
 func noescape(str string) template.HTML {
@@ -33,22 +33,22 @@ func init() {
 	}
 
 	// load file content
-	TMP_GOFILE_FILE = template.New("file")
-	TMP_GOFILE_FILE.Funcs(fn)
-	tmpl, err := TMP_GOFILE_FILE.Parse(embeddedTemplateGofile)
+	templateGoRangerFile = template.New("file")
+	templateGoRangerFile.Funcs(fn)
+	tmpl, err := templateGoRangerFile.Parse(embeddedTemplateGofile)
 	if err != nil {
 		panic(err)
 	}
-	TMP_GOFILE_FILE = tmpl
+	templateGoRangerFile = tmpl
 
 	// load service content
-	TMP_SERVICE_DEFINITION = template.New("service")
-	TMP_SERVICE_DEFINITION.Funcs(fn)
-	tmpl, err = TMP_SERVICE_DEFINITION.Parse(embeddedTemplateService)
+	templateGoServiceDefinition = template.New("service")
+	templateGoServiceDefinition.Funcs(fn)
+	tmpl, err = templateGoServiceDefinition.Parse(embeddedTemplateService)
 	if err != nil {
 		panic(err)
 	}
-	TMP_SERVICE_DEFINITION = tmpl
+	templateGoServiceDefinition = tmpl
 }
 
 func New() *rangerc {
@@ -137,7 +137,7 @@ type goFileRenderOpts struct {
 }
 
 func (fc *rangerc) renderFile(renderOpts goFileRenderOpts) (string, error) {
-	return fc.render(TMP_GOFILE_FILE, renderOpts)
+	return fc.render(templateGoRangerFile, renderOpts)
 }
 
 // those are the input options for the service.templace
@@ -147,7 +147,7 @@ type goServiceRenderOpts struct {
 }
 
 func (fc *rangerc) renderService(renderOpts goServiceRenderOpts, index int) (string, error) {
-	return fc.render(TMP_SERVICE_DEFINITION, renderOpts)
+	return fc.render(templateGoServiceDefinition, renderOpts)
 }
 
 // render a given go template
