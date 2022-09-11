@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -99,7 +99,7 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 			log.Debug().Str("body", spb.Message).Int("status", resp.StatusCode).Msg("non-ok http request")
 			return status.FromProto(spb).Err()
 		} else {
-			payload, err := ioutil.ReadAll(reader)
+			payload, err := io.ReadAll(reader)
 			if err != nil {
 				log.Error().Err(err).Msg("could not parse http body")
 			}
@@ -111,7 +111,7 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 		return errors.Wrap(err, "aborted because context was done")
 	}
 
-	respBodyBytes, err := ioutil.ReadAll(resp.Body)
+	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}

@@ -3,7 +3,7 @@ package ranger
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -104,7 +104,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // the context. It also adds the http headers to the context.
 func preProcessRequest(ctx context.Context, req *http.Request) (context.Context, context.CancelFunc, []byte, error) {
 	// read body content
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	defer req.Body.Close()
 	if err != nil {
 		return nil, nil, nil, status.Error(codes.DataLoss, "unrecoverable data loss or corruption")

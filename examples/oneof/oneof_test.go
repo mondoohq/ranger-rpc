@@ -3,7 +3,7 @@ package oneof_test
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -84,7 +84,7 @@ func TestOneOfJSON(t *testing.T) {
 
 		// check response
 		r := &oneof.OneOfReply{}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		err = jsonpb.Unmarshal(data, r)
 		assert.Nil(t, err)
@@ -108,7 +108,7 @@ func TestOneOfJSON(t *testing.T) {
 
 		// check response
 		r := &oneof.OneOfReply{}
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		err = jsonpb.Unmarshal(data, r)
 		assert.Nil(t, err)

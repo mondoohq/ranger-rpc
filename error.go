@@ -2,7 +2,6 @@ package ranger
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -51,7 +50,7 @@ func HttpError(w http.ResponseWriter, req *http.Request, err error) {
 
 // parseStatus tries to parse the proto Status from the body of the response.
 func parseStatus(reader io.Reader) (*spb.Status, error) {
-	payload, err := ioutil.ReadAll(reader)
+	payload, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
