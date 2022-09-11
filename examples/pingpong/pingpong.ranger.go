@@ -16,13 +16,6 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-// service interface definition
-
-type PingPong interface {
-	Ping(context.Context, *PingRequest) (*PongReply, error)
-	NoPing(context.Context, *Empty) (*PongReply, error)
-}
-
 // client implementation
 
 type PingPongClient struct {
@@ -58,6 +51,13 @@ func (c *PingPongClient) NoPing(ctx context.Context, in *Empty) (*PongReply, err
 	out := new(PongReply)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/NoPing"}, ""), in, out)
 	return out, err
+}
+
+// service interface definition
+
+type PingPong interface {
+	Ping(context.Context, *PingRequest) (*PongReply, error)
+	NoPing(context.Context, *Empty) (*PongReply, error)
 }
 
 // server implementation

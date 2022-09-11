@@ -3,9 +3,8 @@ package generator
 import (
 	"bufio"
 	"bytes"
-	"html/template"
-
 	_ "embed"
+	"html/template"
 
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
@@ -15,11 +14,15 @@ var (
 	//go:embed templates/gofile.template
 	embeddedTemplateGofile string
 
-	//go:embed templates/service.template
-	embeddedTemplateService string
+	//go:embed templates/service_client.template
+	embeddedTemplateServiceClient string
 
-	templateGoRangerFile        *template.Template
-	templateGoServiceDefinition *template.Template
+	//go:embed templates/service_server.template
+	embeddedTemplateServiceServer string
+
+	templateGoRangerFile    *template.Template
+	templateGoServiceClient *template.Template
+	templateGoServiceServer *template.Template
 )
 
 func noescape(str string) template.HTML {
@@ -41,14 +44,23 @@ func init() {
 	}
 	templateGoRangerFile = tmpl
 
-	// load service content
-	templateGoServiceDefinition = template.New("service")
-	templateGoServiceDefinition.Funcs(fn)
-	tmpl, err = templateGoServiceDefinition.Parse(embeddedTemplateService)
+	// load service client content
+	templateGoServiceClient = template.New("service_client")
+	templateGoServiceClient.Funcs(fn)
+	tmpl, err = templateGoServiceClient.Parse(embeddedTemplateServiceClient)
 	if err != nil {
 		panic(err)
 	}
-	templateGoServiceDefinition = tmpl
+	templateGoServiceClient = tmpl
+
+	// load service server content
+	templateGoServiceServer = template.New("service_server")
+	templateGoServiceServer.Funcs(fn)
+	tmpl, err = templateGoServiceServer.Parse(embeddedTemplateServiceServer)
+	if err != nil {
+		panic(err)
+	}
+	templateGoServiceServer = tmpl
 }
 
 func New() *rangerc {
@@ -81,7 +93,7 @@ func (fc *rangerc) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Pack
 		imports := make(map[string]bool)
 
 		// iterate over each service
-		for i, service := range f.Services() {
+		for _, service := range f.Services() {
 
 			// collect import paths for each protobuf method
 			for _, m := range service.Methods() {
@@ -100,13 +112,21 @@ func (fc *rangerc) Execute(targets map[string]pgs.File, pkgs map[string]pgs.Pack
 				}
 			}
 
-			// render service
-			service, err := fc.renderService(goServiceRenderOpts{
+			// render service client
+			serviceClient, err := fc.renderServiceClient(goServiceRenderOpts{
 				Pkg:     pkg,
 				Service: service,
-			}, i)
-			fc.CheckErr(err, "unable to render ", service, " to proto")
-			servicesRendered += service
+			})
+			fc.CheckErr(err, "unable to render ", service, " client to proto")
+			servicesRendered += serviceClient
+
+			// render service server
+			serviceServer, err := fc.renderServiceServer(goServiceRenderOpts{
+				Pkg:     pkg,
+				Service: service,
+			})
+			fc.CheckErr(err, "unable to render ", service, " server to proto")
+			servicesRendered += serviceServer
 		}
 
 		// generate complete file, services are included
@@ -146,8 +166,12 @@ type goServiceRenderOpts struct {
 	Service pgs.Service
 }
 
-func (fc *rangerc) renderService(renderOpts goServiceRenderOpts, index int) (string, error) {
-	return fc.render(templateGoServiceDefinition, renderOpts)
+func (fc *rangerc) renderServiceClient(renderOpts goServiceRenderOpts) (string, error) {
+	return fc.render(templateGoServiceClient, renderOpts)
+}
+
+func (fc *rangerc) renderServiceServer(renderOpts goServiceRenderOpts) (string, error) {
+	return fc.render(templateGoServiceServer, renderOpts)
 }
 
 // render a given go template

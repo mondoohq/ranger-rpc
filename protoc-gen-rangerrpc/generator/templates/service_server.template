@@ -1,6 +1,7 @@
 {{- $root := . }}
 {{- $service := .Service }}
 {{- $servicedesciptor := .Service.Descriptor }}
+
 // service interface definition
 
 type {{$servicedesciptor.Name}} interface {
@@ -8,42 +9,6 @@ type {{$servicedesciptor.Name}} interface {
 	{{$m.Name.String}}(context.Context, *{{ gotype $root.Pkg .Input }}) (*{{ gotype $root.Pkg .Output }}, error)
 	{{- end }}
 }
-
-// client implementation
-
-type {{$servicedesciptor.Name}}Client struct {
-	ranger.Client
-	httpclient ranger.HTTPClient
-	prefix string
-}
-
-func New{{$servicedesciptor.Name}}Client(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*{{$service.Name}}Client, error) {
-	base, err := url.Parse(ranger.SanitizeUrl(addr))
-	if err != nil {
-		return nil, err
-	}
-
-	u, err := url.Parse("./{{$servicedesciptor.Name}}")
-	if err != nil {
-		return nil, err
-	}
-
-	serviceClient := &{{$service.Name}}Client{
-		httpclient: client,
-		prefix: base.ResolveReference(u).String(),
-	}
-	serviceClient.AddPlugin(plugins...)
-	return serviceClient, nil
-}
-
-{{- range $idx, $m := $service.Methods }}
-func (c *{{$service.Name}}Client) {{.Name}}(ctx context.Context, in *{{ gotype $root.Pkg .Input }}) (*{{ gotype $root.Pkg .Output }}, error) {
-	out := new({{ gotype $root.Pkg .Output }})
-	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/{{.Name}}"}, ""), in, out)
-	return out, err
-}
-
-{{- end }}
 
 // server implementation
 
@@ -105,5 +70,4 @@ func (p *{{$servicedesciptor.Name}}Server) {{.Name}}(ctx context.Context, reqByt
 	}
 	return p.handler.{{.Name}}(ctx, &req)
 }
-
 {{- end }}

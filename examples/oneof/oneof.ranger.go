@@ -16,12 +16,6 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-// service interface definition
-
-type OneOf interface {
-	Echo(context.Context, *OneOfRequest) (*OneOfReply, error)
-}
-
 // client implementation
 
 type OneOfClient struct {
@@ -52,6 +46,12 @@ func (c *OneOfClient) Echo(ctx context.Context, in *OneOfRequest) (*OneOfReply, 
 	out := new(OneOfReply)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/Echo"}, ""), in, out)
 	return out, err
+}
+
+// service interface definition
+
+type OneOf interface {
+	Echo(context.Context, *OneOfRequest) (*OneOfReply, error)
 }
 
 // server implementation
