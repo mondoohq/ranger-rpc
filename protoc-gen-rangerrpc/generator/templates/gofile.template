@@ -10,7 +10,7 @@ import (
 	"strings"
 	"errors"
 
-    jsonpb "google.golang.org/protobuf/encoding/protojson"
+	jsonpb "google.golang.org/protobuf/encoding/protojson"
 	ranger "go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/metadata"
 	pb "google.golang.org/protobuf/proto"

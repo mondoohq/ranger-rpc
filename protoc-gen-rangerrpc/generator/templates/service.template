@@ -17,7 +17,7 @@ type {{$servicedesciptor.Name}}Client struct {
 	prefix string
 }
 
-func New{{$servicedesciptor.Name}}Client(addr string, client ranger.HTTPClient) (*{{$service.Name}}Client, error) {
+func New{{$servicedesciptor.Name}}Client(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*{{$service.Name}}Client, error) {
 	base, err := url.Parse(ranger.SanitizeUrl(addr))
 	if err != nil {
 		return nil, err
@@ -28,10 +28,12 @@ func New{{$servicedesciptor.Name}}Client(addr string, client ranger.HTTPClient) 
 		return nil, err
 	}
 
-	return &{{$service.Name}}Client{
+	serviceClient := &{{$service.Name}}Client{
 		httpclient: client,
 		prefix: base.ResolveReference(u).String(),
-	}, nil
+	}
+	serviceClient.AddPlugins(plugins...)
+	return serviceClient, nil
 }
 
 {{- range $idx, $m := $service.Methods }}
