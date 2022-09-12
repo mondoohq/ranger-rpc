@@ -283,12 +283,24 @@ func TestClientPlugin(t *testing.T) {
 	ts := httptest.NewServer(pingPongSrv)
 	defer ts.Close()
 
-	client, err := pingpong.NewPingPongClient(ts.URL, ts.Client())
-	require.NoError(t, err)
-	client.AddPlugin(newStaticTokenClientPlugin("secret"))
-	resp, err := client.Ping(context.Background(), &pingpong.PingRequest{
-		Sender: "hi",
+	t.Run("use separate plugin initialization", func(t *testing.T) {
+		client, err := pingpong.NewPingPongClient(ts.URL, ts.Client())
+		require.NoError(t, err)
+		client.AddPlugin(newStaticTokenClientPlugin("secret"))
+		resp, err := client.Ping(context.Background(), &pingpong.PingRequest{
+			Sender: "hi",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "Hello hi with Bearer secret", resp.Message, "correct response")
 	})
-	require.NoError(t, err)
-	assert.Equal(t, "Hello hi with Bearer secret", resp.Message, "correct response")
+
+	t.Run("initialize plugin with client constructor", func(t *testing.T) {
+		client, err := pingpong.NewPingPongClient(ts.URL, ts.Client(), newStaticTokenClientPlugin("secret"))
+		require.NoError(t, err)
+		resp, err := client.Ping(context.Background(), &pingpong.PingRequest{
+			Sender: "hi",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "Hello hi with Bearer secret", resp.Message, "correct response")
+	})
 }

@@ -26,8 +26,17 @@ type Client struct {
 	plugins []ClientPlugin
 }
 
+// AddPlugin adds a client plugin.
+// Deprecated: use AddPlugins instead.
 func (c *Client) AddPlugin(plugin ClientPlugin) {
-	c.plugins = append(c.plugins, plugin)
+	c.AddPlugins(plugin)
+}
+
+// AddPlugins adds one or many client plugins.
+func (c *Client) AddPlugins(plugins ...ClientPlugin) {
+	for i := range plugins {
+		c.plugins = append(c.plugins, plugins[i])
+	}
 }
 
 type HTTPClient interface {
