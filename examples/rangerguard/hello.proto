@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package io.mondoo.falcon.example.helloworld;
+option go_package = "go.mondoo.com/ranger-rpc/examples/rangerguard";
+
+service HelloWorld {
+  rpc Hello(HelloReq) returns (HelloResp);
+  rpc Info(Empty) returns (Tags);
+}
+
+message HelloReq {
+  string subject = 1;
+}
+
+message HelloResp {
+  string text = 1;
+}
+
+message Empty {}
+
+message Tags {
+  map<string, string> tags = 1;
+}
