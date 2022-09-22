@@ -30,7 +30,7 @@ type OneOfClient struct {
 	prefix     string
 }
 
-func NewOneOfClient(addr string, client ranger.HTTPClient, opts ...ranger.ClientPlugin) (*OneOfClient, error) {
+func NewOneOfClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*OneOfClient, error) {
 	base, err := url.Parse(ranger.SanitizeUrl(addr))
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func NewOneOfClient(addr string, client ranger.HTTPClient, opts ...ranger.Client
 		httpclient: client,
 		prefix:     base.ResolveReference(u).String(),
 	}
-	serviceClient.AddPlugins(opts...)
+	serviceClient.AddPlugins(plugins...)
 	return serviceClient, nil
 }
 func (c *OneOfClient) Echo(ctx context.Context, in *OneOfRequest) (*OneOfReply, error) {
