@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -15,11 +13,12 @@ var (
 	DefaultTLSHandshakeTimeout = 10 * time.Second
 )
 
-func newHttpTransport(proxy string) (*http.Transport, error) {
-	proxyFn, err := newProxyFunc(proxy)
-	if err != nil {
-		return nil, err
+func newHttpTransport(proxy *url.URL) *http.Transport {
+	proxyFn := http.ProxyFromEnvironment
+	if proxy != nil {
+		proxyFn = http.ProxyURL(proxy)
 	}
+
 	tr := &http.Transport{
 		Proxy: proxyFn,
 		DialContext: (&net.Dialer{
@@ -32,7 +31,7 @@ func newHttpTransport(proxy string) (*http.Transport, error) {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 
-	return tr, nil
+	return tr
 }
 
 func newHttpClient(tr *http.Transport) *http.Client {
@@ -45,10 +44,7 @@ func newHttpClient(tr *http.Transport) *http.Client {
 // DefaultHttpClient will set up a basic client
 // with default timeouts/proxies/etc.
 func DefaultHttpClient() *http.Client {
-	tr, err := newHttpTransport("")
-	if err != nil {
-		log.Fatal().Err(err).Msg("unexpectedly failed to create a default HttpClient")
-	}
+	tr := newHttpTransport(nil)
 
 	return newHttpClient(tr)
 }
@@ -59,33 +55,16 @@ type HttpClientOpts struct {
 	Proxy string
 }
 
-func HttpClient(opts *HttpClientOpts) (*http.Client, error) {
-	tr, err := newHttpTransport(opts.Proxy)
-	if err != nil {
-		return nil, err
-	}
-
-	return newHttpClient(tr), nil
-}
-
-type proxyFunc func(*http.Request) (*url.URL, error)
-
-// newProxyFunc will use a standard ProxyFromEnvironment if no proxy
-// information is provided. Otherwise, parse the proxy string, and use
-// it as the proxy endpoint.
-func newProxyFunc(proxy string) (proxyFunc, error) {
-	proxyFn := http.ProxyFromEnvironment
-
-	if proxy != "" {
-		proxyURL, err := url.Parse(proxy)
+func NewHttpClient(opts *HttpClientOpts) (*http.Client, error) {
+	var proxy *url.URL
+	if opts.Proxy != "" {
+		var err error
+		proxy, err = url.Parse(opts.Proxy)
 		if err != nil {
 			return nil, err
 		}
-
-		proxyFn = func(*http.Request) (*url.URL, error) {
-			return proxyURL, nil
-		}
 	}
+	tr := newHttpTransport(proxy)
 
-	return proxyFn, nil
+	return newHttpClient(tr), nil
 }
