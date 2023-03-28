@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -62,7 +61,6 @@ func TestRangerHttpServer(t *testing.T) {
 	srv.ServeHTTP(w, req)
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode, "correct status code")
-
 }
 
 func TestRangerHttpHeader(t *testing.T) {
@@ -97,7 +95,7 @@ func TestRangerHttpHeader(t *testing.T) {
 	resp = w.Result()
 	assert.Equal(t, 200, resp.StatusCode, "correct status code")
 
-	content, err := ioutil.ReadAll(w.Body)
+	content, err := io.ReadAll(w.Body)
 	assert.Nil(t, err, "should return protobuf content")
 
 	var msg pingpong.PongReply
@@ -117,7 +115,7 @@ func runStatusCall(srv http.Handler, path string) *http.Response {
 }
 
 func parseStatus(reader io.Reader) (*spb.Status, error) {
-	payload, err := ioutil.ReadAll(reader)
+	payload, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +161,7 @@ func TestRangerErrorHandling(t *testing.T) {
 	srv.ServeHTTP(w, req)
 	resp = w.Result()
 	assert.Equal(t, 400, resp.StatusCode, "correct status code")
-	payload, err := ioutil.ReadAll(resp.Body)
+	payload, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
