@@ -13,14 +13,30 @@ var (
 	DefaultTLSHandshakeTimeout = 10 * time.Second
 )
 
-func newHttpTransport(proxy *url.URL) *http.Transport {
-	proxyFn := http.ProxyFromEnvironment
-	if proxy != nil {
-		proxyFn = http.ProxyURL(proxy)
-	}
+// DefaultHttpClient will set up a basic client
+// with default timeouts/proxies/etc.
+func DefaultHttpClient() *http.Client {
+	return NewHttpClient()
+}
 
+type HttpClientOption func(c *http.Client)
+
+func WithProxy(proxy *url.URL) HttpClientOption {
+	return func(c *http.Client) {
+		if proxy == nil {
+			return
+		}
+
+		switch t := c.Transport.(type) {
+		case *http.Transport:
+			t.Proxy = http.ProxyURL(proxy)
+		}
+	}
+}
+
+func NewHttpClient(opts ...HttpClientOption) *http.Client {
 	tr := &http.Transport{
-		Proxy: proxyFn,
+		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   DefaultHttpTimeout,
 			KeepAlive: 30 * time.Second,
@@ -31,40 +47,13 @@ func newHttpTransport(proxy *url.URL) *http.Transport {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 
-	return tr
-}
-
-func newHttpClient(tr *http.Transport) *http.Client {
-	return &http.Client{
+	c := &http.Client{
 		Transport: tr,
 		Timeout:   DefaultHttpTimeout,
 	}
-}
 
-// DefaultHttpClient will set up a basic client
-// with default timeouts/proxies/etc.
-func DefaultHttpClient() *http.Client {
-	tr := newHttpTransport(nil)
-
-	return newHttpClient(tr)
-}
-
-type HttpClientOpts struct {
-	// Proxy is the string representation of the proxy the client
-	// should use for connections.
-	Proxy string
-}
-
-func NewHttpClient(opts *HttpClientOpts) (*http.Client, error) {
-	var proxy *url.URL
-	if opts.Proxy != "" {
-		var err error
-		proxy, err = url.Parse(opts.Proxy)
-		if err != nil {
-			return nil, err
-		}
+	for i := range opts {
+		opts[i](c)
 	}
-	tr := newHttpTransport(proxy)
-
-	return newHttpClient(tr), nil
+	return c
 }
