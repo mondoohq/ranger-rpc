@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/cockroachdb/errors v1.9.0
 	github.com/go-openapi/spec v0.20.6
-	github.com/google/go-cmp v0.5.8
+	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/lyft/protoc-gen-star v0.6.1
 	github.com/rs/zerolog v1.27.0
