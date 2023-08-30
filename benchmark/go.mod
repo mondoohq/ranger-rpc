@@ -6,7 +6,7 @@ require (
 	github.com/rakyll/hey v0.1.4
 	github.com/twitchtv/twirp v8.1.2+incompatible
 	go.mondoo.com/ranger-rpc v0.0.0-00010101000000-000000000000
-	golang.org/x/net v0.0.0-20220708220712-1185a9018129
+	golang.org/x/net v0.7.0
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.0
 )
@@ -25,8 +25,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/rs/zerolog v1.27.0 // indirect
-	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20220715211116-798f69b842b9 // indirect
 )
 
