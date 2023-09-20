@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pingpong
 
 // To regenerate the protocol buffer output for this package, run `go generate`

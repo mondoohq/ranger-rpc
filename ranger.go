@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ranger
 
 // Ranger RPC is a simple and fast proto-based RPC framework

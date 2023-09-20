@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sample
 
 // openssl genrsa -out server.key 2048
