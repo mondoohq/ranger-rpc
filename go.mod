@@ -9,8 +9,8 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/lyft/protoc-gen-star v0.6.2
 	github.com/rs/zerolog v1.27.0
-	github.com/stretchr/testify v1.8.0
-	go.opentelemetry.io/otel v1.10.0
+	github.com/stretchr/testify v1.8.4
+	go.opentelemetry.io/otel v1.19.0
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0
 	google.golang.org/genproto v0.0.0-20220715211116-798f69b842b9
 	google.golang.org/protobuf v1.28.0
@@ -23,7 +23,7 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/getsentry/sentry-go v0.13.0 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
@@ -40,7 +40,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/spf13/afero v1.9.0 // indirect
-	go.opentelemetry.io/otel/trace v1.10.0 // indirect
+	go.opentelemetry.io/otel/metric v1.19.0 // indirect
+	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.8 // indirect
