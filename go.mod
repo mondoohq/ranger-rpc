@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/cockroachdb/errors v1.11.1
-	github.com/go-openapi/spec v0.20.6
+	github.com/go-openapi/spec v0.20.9
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.1
 	github.com/lyft/protoc-gen-star v0.6.2
