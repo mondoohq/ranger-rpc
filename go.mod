@@ -6,7 +6,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/go-openapi/spec v0.20.9
 	github.com/google/go-cmp v0.5.9
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/lyft/protoc-gen-star v0.6.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
