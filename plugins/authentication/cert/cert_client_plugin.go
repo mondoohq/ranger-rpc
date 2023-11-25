@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	jose "github.com/go-jose/go-jose/v3"
+	jwt "github.com/go-jose/go-jose/v3/jwt"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
-	jose "gopkg.in/square/go-jose.v2"
-	jwt "gopkg.in/square/go-jose.v2/jwt"
 )
 
 type ClientConfig struct {
