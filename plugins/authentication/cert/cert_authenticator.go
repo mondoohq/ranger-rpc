@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	jwt "github.com/go-jose/go-jose/v3/jwt"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/header"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/user"
-	jwt "gopkg.in/square/go-jose.v2/jwt"
 )
 
 type KeyStore interface {

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/user"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 func TestClaimParser(t *testing.T) {

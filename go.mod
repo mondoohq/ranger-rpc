@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/cockroachdb/errors v1.11.1
+	github.com/go-jose/go-jose/v3 v3.0.1
 	github.com/go-openapi/spec v0.20.9
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.4.0
@@ -12,9 +13,8 @@ require (
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/otel v1.21.0
 	golang.org/x/crypto v0.15.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f
 	google.golang.org/protobuf v1.31.0
-	gopkg.in/square/go-jose.v2 v2.6.0
 	moul.io/http2curl v1.0.0
 )
 
