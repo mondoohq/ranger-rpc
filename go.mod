@@ -11,8 +11,8 @@ require (
 	github.com/lyft/protoc-gen-star v0.6.2
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
-	go.opentelemetry.io/otel v1.22.0
-	golang.org/x/crypto v0.18.0
+	go.opentelemetry.io/otel v1.23.1
+	golang.org/x/crypto v0.19.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f
 	google.golang.org/protobuf v1.32.0
 	moul.io/http2curl v1.0.0
@@ -41,10 +41,10 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/smartystreets/goconvey v1.8.1 // indirect
 	github.com/spf13/afero v1.9.0 // indirect
-	go.opentelemetry.io/otel/metric v1.22.0 // indirect
-	go.opentelemetry.io/otel/trace v1.22.0 // indirect
+	go.opentelemetry.io/otel/metric v1.23.1 // indirect
+	go.opentelemetry.io/otel/trace v1.23.1 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
