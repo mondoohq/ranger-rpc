@@ -78,6 +78,9 @@ func (r *guardMux) Use(mwf ...http.HandlerFunc) {
 func (gm guardMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	guardCtx, span := tracer.Start(r.Context(), "ranger.guard.ServeHTTP")
 	defer span.End()
+
+	r = r.WithContext(guardCtx)
+
 	// iterate over middle ware
 	for i := len(gm.middlewares) - 1; i >= 0; i-- {
 		fn := gm.middlewares[i]
@@ -88,20 +91,17 @@ func (gm guardMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user, authenticated, authnReq := gm.authenticate(r)
 	if !authenticated || user == nil {
 		log.Info().Str("component", "guard").Str("client", r.RemoteAddr).Str("uri", r.RequestURI).Msg("Unauthenticated")
-		ranger.HttpError(w, authnReq, AUTHENTICATION_DENIED_ERROR)
+		ranger.HttpError(span, w, authnReq, AUTHENTICATION_DENIED_ERROR)
 		span.End()
 		return
 	}
 
 	// tell hooks about the user
 	for i := range gm.hooks {
-		_, span := tracer.Start(guardCtx, "ranger.guard.ServeHTTP/hook/"+gm.hooks[i].Name())
 		newCtx, err := gm.hooks[i].Run(authnReq.Context(), user, r)
-		span.End()
 		if err != nil {
 			log.Error().Err(err).Str("hook", gm.hooks[i].Name()).Msg("could not authenticate because ranger guard hook returned an error")
-			ranger.HttpError(w, authnReq, AUTHENTICATION_DENIED_ERROR)
-			span.End()
+			ranger.HttpError(span, w, authnReq, AUTHENTICATION_DENIED_ERROR)
 			return
 		}
 		// assign new context
@@ -113,12 +113,10 @@ func (gm guardMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	authorized, authzReq := gm.authorize(authnReq, user)
 	if !authorized {
 		log.Info().Str("component", "guard").Str("client", r.RemoteAddr).Str("uri", r.RequestURI).Msg("Unauthorized")
-		ranger.HttpError(w, authzReq, PERMISSION_DENIED_ERROR)
-		span.End()
+		ranger.HttpError(span, w, authzReq, PERMISSION_DENIED_ERROR)
 		return
 	}
 
-	span.End()
 	gm.next.ServeHTTP(w, authzReq)
 }
 
