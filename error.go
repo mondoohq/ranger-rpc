@@ -10,12 +10,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
 // HttpError writes an error to the response.
-func HttpError(w http.ResponseWriter, req *http.Request, err error) {
+func HttpError(span trace.Span, w http.ResponseWriter, req *http.Request, err error) {
 	// check if the accept header is set, otherwise use the incoming content type
 	accept := determineResponseType(req.Header.Get("Content-Type"), req.Header.Get("Accept"))
 
@@ -28,6 +30,10 @@ func HttpError(w http.ResponseWriter, req *http.Request, err error) {
 	h := w.Header()
 	// write status code
 	status := status.HTTPStatusFromCode(s.Code())
+
+	span.RecordError(err, trace.WithAttributes(
+		attribute.Int("mondoo.ranger.status", status),
+	))
 
 	if status >= 500 {
 		log.Error().

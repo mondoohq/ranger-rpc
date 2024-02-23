@@ -12,6 +12,9 @@ import (
 
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -29,6 +32,8 @@ var validContentTypes = map[string]struct{}{
 	ContentTypeGrpcProtobuf:  {},
 	ContentTypeJson:          {},
 }
+
+var tracer = otel.Tracer("go.mondoo.com/mondoo/ranger-rpc")
 
 // Method represents a RPC method and is used by protoc-gen-rangerrpc
 type Method func(ctx context.Context, reqBytes *[]byte) (proto.Message, error)
@@ -57,36 +62,44 @@ type server struct {
 
 // ServeHTTP is the main entry point for the http server.
 func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	ctx, cancel := context.WithCancel(req.Context())
+	ctx, span := tracer.Start(req.Context(), "ranger.server.ServeHTTP", trace.WithAttributes(
+		attribute.String("mondoo.ranger.service", s.service.Name)))
+	defer span.End()
+
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	req = req.WithContext(ctx)
 
 	contentType := req.Header.Get("Content-Type")
 
 	// verify content type
 	err := verifyContentType(req, contentType)
 	if err != nil {
-		HttpError(w, req, err)
+		HttpError(span, w, req, err)
 		return
 	}
 
 	if !strings.HasPrefix(req.URL.Path, s.prefix) {
-		HttpError(w, req, status.Error(codes.NotFound, req.URL.Path+" is not available"))
+		HttpError(span, w, req, status.Error(codes.NotFound, req.URL.Path+" is not available"))
 		return
 	}
 
 	// extract the rpc method name and invoke the method
 	name := strings.TrimPrefix(req.URL.Path, s.prefix)
 
+	span.SetAttributes(attribute.String("mondoo.ranger.method", name))
+
 	method, ok := s.service.Methods[name]
 	if !ok {
 		err := status.Error(codes.NotFound, "method not defined")
-		HttpError(w, req, err)
+		HttpError(span, w, req, err)
 		return
 	}
 
 	rctx, rcancel, body, err := preProcessRequest(ctx, req)
 	if err != nil {
-		HttpError(w, req, err)
+		HttpError(span, w, req, err)
 		return
 	}
 	defer rcancel()
@@ -94,7 +107,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// invoke method and send the response
 	resp, err := method(rctx, &body)
 	if err != nil {
-		HttpError(w, req, err)
+		HttpError(span, w, req, err)
 		return
 	}
 	// check if the accept header is set, otherwise use the incoming content type
@@ -125,7 +138,8 @@ func preProcessRequest(ctx context.Context, req *http.Request) (context.Context,
 func (s *server) sendResponse(w http.ResponseWriter, req *http.Request, resp proto.Message, contentType string) {
 	payload, contentType, err := convertProtoToPayload(resp, contentType)
 	if err != nil {
-		HttpError(w, req, status.Error(codes.Internal, "error encoding response"))
+		span := trace.SpanFromContext(req.Context())
+		HttpError(span, w, req, status.Error(codes.Internal, "error encoding response"))
 		return
 	}
 
