@@ -1,5 +1,3 @@
-
-
 Tested on M1 macOS
 
 # Twirp
@@ -13,7 +11,7 @@ Summary:
   Fastest:	0.0008 secs
   Average:	0.0024 secs
   Requests/sec:	19211.2956
-  
+
   Total data:	33600 bytes
   Size/request:	168 bytes
 ```
@@ -30,4 +28,3 @@ Summary:
   Average:	0.0276 secs
   Requests/sec:	1562.8643
 ```
-
