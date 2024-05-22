@@ -8,7 +8,7 @@ Ranger RPC is a simple and fast proto-based RPC framework
 - work with standard Protocol Buffers service definitions
 - works with GO's standard http server and hence does not require HTTP 2
 - minimal runtime dependencies
-- make it easy to generate json/yaml/protobuf based apis
+- make it easy to generate json/yaml/protobuf based APIs
 
 ## References
 
@@ -17,9 +17,9 @@ Ranger RPC is a simple and fast proto-based RPC framework
 
 ## Kudos
 
-This implementation is insipred by:
+This implementation is inspired by:
 
-- [Rob Pike's video](https://www.youtube.com/watch?v=ENLWEfi0Tkg) 
+- [Rob Pike's video](https://www.youtube.com/watch?v=ENLWEfi0Tkg)
 - [GRPC](https://grpc.io/)
 - [Twirp](https://github.com/twitchtv/twirp).
 
