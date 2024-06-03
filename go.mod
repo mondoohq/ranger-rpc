@@ -3,7 +3,7 @@ module go.mondoo.com/ranger-rpc
 go 1.22
 
 require (
-	github.com/cockroachdb/errors v1.11.2
+	github.com/cockroachdb/errors v1.11.3
 	github.com/go-jose/go-jose/v3 v3.0.3
 	github.com/go-openapi/spec v0.21.0
 	github.com/google/go-cmp v0.6.0
