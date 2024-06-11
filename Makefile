@@ -7,7 +7,7 @@ prep:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 
 build/snapshot:
-	goreleaser release --snapshot --skip-publish --rm-dist
+	goreleaser release --snapshot --skip-publish --clean
 
 .PHONY: generate/examples
 generate/examples:
