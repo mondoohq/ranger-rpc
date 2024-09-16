@@ -97,7 +97,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	rctx, rcancel, body, err := preProcessRequest(ctx, req)
+	rctx, rcancel, body, err := preProcessRequest(ctx, span, req)
 	if err != nil {
 		HttpError(span, w, req, err)
 		return
@@ -118,11 +118,12 @@ func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // preProcessRequest is used to preprocess the incoming request.
 // It returns the context, a cancel function and the body of the request. The cancel function can be used to cancel
 // the context. It also adds the http headers to the context.
-func preProcessRequest(ctx context.Context, req *http.Request) (context.Context, context.CancelFunc, []byte, error) {
+func preProcessRequest(ctx context.Context, span trace.Span, req *http.Request) (context.Context, context.CancelFunc, []byte, error) {
 	// read body content
 	body, err := io.ReadAll(req.Body)
 	defer req.Body.Close()
 	if err != nil {
+		span.RecordError(err)
 		return nil, nil, nil, status.Error(codes.DataLoss, "unrecoverable data loss or corruption")
 	}
 
