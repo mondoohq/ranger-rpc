@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel"
@@ -158,7 +159,12 @@ func convertProtoToPayload(resp proto.Message, contentType string) ([]byte, stri
 	switch contentType {
 	case ContentTypeProtobuf, ContentTypeGrpcProtobuf, ContentTypeOctetProtobuf:
 		contentType = ContentTypeProtobuf
-		payload, err = proto.Marshal(resp)
+		if m, ok := resp.(vtprotoMessage); ok {
+			log.Debug().Msgf("using vtproto for input")
+			payload, err = m.MarshalVT()
+		} else {
+			payload, err = proto.Marshal(resp)
+		}
 	// as default, we return json to be compatible with browsers, since they do not
 	// request as application/json as default
 	default:
