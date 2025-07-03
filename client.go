@@ -46,11 +46,22 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+type vtprotoMessage interface {
+	MarshalVT() ([]byte, error)
+	UnmarshalVT([]byte) error
+}
+
 // DoClientRequest makes a request to the Ranger service.
 // It will marshal the proto.Message into the request body, do the request and then parse the response into the
 // response proto.Message.
 func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url string, in, out proto.Message) (err error) {
-	reqBodyBytes, err := proto.Marshal(in)
+	var reqBodyBytes []byte
+	if m, ok := in.(vtprotoMessage); ok {
+		log.Debug().Msgf("using vtproto for input")
+		reqBodyBytes, err = m.MarshalVT()
+	} else {
+		reqBodyBytes, err = proto.Marshal(in)
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal proto request")
 	}
@@ -125,7 +136,12 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 	if err != nil {
 		return errors.Wrap(err, "failed to read response body")
 	}
-	if err = proto.Unmarshal(respBodyBytes, out); err != nil {
+	if m, ok := out.(vtprotoMessage); ok {
+		log.Debug().Msgf("using vtproto for output")
+		if err := m.UnmarshalVT(respBodyBytes); err != nil {
+			return errors.Wrap(err, "failed to unmarshal proto response")
+		}
+	} else if err = proto.Unmarshal(respBodyBytes, out); err != nil {
 		return errors.Wrap(err, "failed to unmarshal proto response")
 	}
 	return nil
