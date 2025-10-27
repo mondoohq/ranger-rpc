@@ -1,14 +1,12 @@
 module go.mondoo.com/ranger-rpc/benchmark
 
-go 1.22
-
-toolchain go1.22.2
+go 1.23.0
 
 require (
 	github.com/rakyll/hey v0.1.4
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	go.mondoo.com/ranger-rpc v0.6.0
-	golang.org/x/net v0.24.0
+	golang.org/x/net v0.38.0
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
 )
@@ -34,8 +32,8 @@ require (
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.26.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240429193739-8cf5692501f6 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )
