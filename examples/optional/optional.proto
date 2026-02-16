@@ -1,0 +1,31 @@
+// Copyright Mondoo, Inc. 2026
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package optional;
+option go_package = "go.mondoo.com/ranger-rpc/example/optional";
+
+message CustomType {}
+
+message OptionalRequest {
+  message InnerCustomType {
+    optional bool active = 1;
+  }
+
+  optional string text = 1;
+  optional uint32 number = 2;
+  optional bool flag = 3;
+  optional CustomType custom = 4;  // tests that optional + custom type is a no-op
+}
+
+message OptionalReply {
+  optional string text = 1;
+  optional uint32 number = 2;
+  optional bool flag = 3;
+  optional CustomType custom = 4;
+}
+
+service OptionalService {
+  rpc Check(OptionalRequest) returns (OptionalReply);
+}

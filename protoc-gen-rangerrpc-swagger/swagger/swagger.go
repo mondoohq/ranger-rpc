@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/go-openapi/spec"
-
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 )
@@ -114,7 +113,6 @@ type SwaggerApi struct {
 }
 
 func (sw *SwaggerApi) AddProtoMessage(definitionName string, message pgs.Message) {
-
 	schemaProps := make(map[string]spec.Schema)
 
 	fields := message.Fields()
@@ -132,6 +130,7 @@ func (sw *SwaggerApi) AddProtoMessage(definitionName string, message pgs.Message
 				Description: fieldDescription,
 				Type:        spec.StringOrArray([]string{fieldType}),
 				Format:      fieldFormat,
+				Nullable:    f.HasOptionalKeyword(),
 				//Items: &spec.SchemaOrArray{
 				//	Schema: &fieldSchema,
 				//},

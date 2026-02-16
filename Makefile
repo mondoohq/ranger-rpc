@@ -13,6 +13,7 @@ build/snapshot:
 generate/examples:
 	go generate ./examples/pingpong
 	go generate ./examples/oneof
+	go generate ./examples/optional
 	go generate ./examples/swagger
 	go generate ./examples/rangerguard
 
