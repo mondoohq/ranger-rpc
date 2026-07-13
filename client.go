@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -50,6 +51,12 @@ type vtprotoMessage interface {
 	MarshalVT() ([]byte, error)
 	UnmarshalVT([]byte) error
 }
+
+// maxErrorBodySize bounds how many bytes of a non-proto error response body we
+// surface in the returned error message. Intermediaries (load balancers,
+// ingresses, proxies) can return large HTML error pages; without a cap those
+// would become multi-KB error strings.
+const maxErrorBodySize = 2 << 10 // 2 KiB
 
 // DoClientRequest makes a request to the Ranger service.
 // It will marshal the proto.Message into the request body, do the request and then parse the response into the
@@ -114,18 +121,34 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 	}
 
 	if resp.StatusCode != 200 {
-		// TODO wrap body in error
-		spb, err := parseStatus(resp.Body)
+		spb, payload, err := parseStatus(resp.Body)
+		// Only treat the body as a proto Status if it actually carries a non-OK
+		// code. An empty or otherwise degenerate body unmarshals without error
+		// into an OK-coded Status whose .Err() is nil, which would silently turn
+		// a non-200 response into a success with an unpopulated output message.
 		if err == nil {
-			log.Debug().Str("body", spb.Message).Int("status", resp.StatusCode).Msg("non-ok http request")
-			return status.FromProto(spb).Err()
-		} else {
-			payload, err := io.ReadAll(reader)
-			if err != nil {
-				log.Error().Err(err).Msg("could not parse http body")
+			if statusErr := status.FromProto(spb).Err(); statusErr != nil {
+				log.Debug().Str("body", spb.Message).Int("status", resp.StatusCode).Msg("non-ok http request")
+				return statusErr
 			}
-			return status.New(status.CodeFromHTTPStatus(resp.StatusCode), string(payload)).Err()
 		}
+		// The body is not a usable proto Status. This typically happens when an
+		// intermediary (load balancer, ingress, proxy) returns an HTML or
+		// plain-text error page — or an empty body — for a 5xx/429. Surface the
+		// body as the error message instead of dropping it, falling back to the
+		// HTTP status line when the body is empty, so the failure is diagnosable
+		// rather than an empty "code = Unknown desc = ".
+		msg := string(payload)
+		if msg == "" {
+			msg = resp.Status
+		} else if len(msg) > maxErrorBodySize {
+			// Cap large error pages (e.g. HTML from an intermediary) so we do
+			// not return multi-KB error messages. ToValidUTF8 drops any partial
+			// rune left at the truncation boundary.
+			msg = strings.ToValidUTF8(msg[:maxErrorBodySize], "") + "... [truncated]"
+		}
+		log.Debug().Str("body", msg).Int("status", resp.StatusCode).Msg("non-ok http request with non-proto body")
+		return status.New(status.CodeFromHTTPStatus(resp.StatusCode), msg).Err()
 	}
 
 	if err = ctx.Err(); err != nil {

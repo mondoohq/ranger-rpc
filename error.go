@@ -58,15 +58,18 @@ func HttpError(span trace.Span, w http.ResponseWriter, req *http.Request, err er
 }
 
 // parseStatus tries to parse the proto Status from the body of the response.
-func parseStatus(reader io.Reader) (*spb.Status, error) {
+// It also returns the raw payload it read so callers can fall back to using the
+// body as an error message when it is not a valid proto Status (e.g. an HTML or
+// plain-text error page from an intermediary load balancer or proxy).
+func parseStatus(reader io.Reader) (*spb.Status, []byte, error) {
 	payload, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var status spb.Status
 	err = proto.Unmarshal(payload, &status)
 	if err != nil {
-		return nil, err
+		return nil, payload, err
 	}
-	return &status, nil
+	return &status, payload, nil
 }
