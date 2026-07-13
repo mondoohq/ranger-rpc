@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -50,6 +51,12 @@ type vtprotoMessage interface {
 	MarshalVT() ([]byte, error)
 	UnmarshalVT([]byte) error
 }
+
+// maxErrorBodySize bounds how many bytes of a non-proto error response body we
+// surface in the returned error message. Intermediaries (load balancers,
+// ingresses, proxies) can return large HTML error pages; without a cap those
+// would become multi-KB error strings.
+const maxErrorBodySize = 2 << 10 // 2 KiB
 
 // DoClientRequest makes a request to the Ranger service.
 // It will marshal the proto.Message into the request body, do the request and then parse the response into the
@@ -134,6 +141,11 @@ func (c *Client) DoClientRequest(ctx context.Context, client HTTPClient, url str
 		msg := string(payload)
 		if msg == "" {
 			msg = resp.Status
+		} else if len(msg) > maxErrorBodySize {
+			// Cap large error pages (e.g. HTML from an intermediary) so we do
+			// not return multi-KB error messages. ToValidUTF8 drops any partial
+			// rune left at the truncation boundary.
+			msg = strings.ToValidUTF8(msg[:maxErrorBodySize], "") + "... [truncated]"
 		}
 		log.Debug().Str("body", msg).Int("status", resp.StatusCode).Msg("non-ok http request with non-proto body")
 		return status.New(status.CodeFromHTTPStatus(resp.StatusCode), msg).Err()

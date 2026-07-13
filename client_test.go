@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -156,4 +157,35 @@ func TestDoClientRequestProtoStatusError(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, codes.PermissionDenied, st.Code(), "the code must come from the proto Status body")
 	assert.Equal(t, msg, st.Message(), "the message must come from the proto Status body, not the HTTP fallback")
+}
+
+// TestDoClientRequestLargeErrorBodyTruncated verifies that a large non-proto
+// error body (e.g. a big HTML error page from an intermediary) is capped rather
+// than surfaced in full, so the returned error message stays bounded.
+func TestDoClientRequestLargeErrorBodyTruncated(t *testing.T) {
+	// A body far larger than the cap, all valid UTF-8.
+	body := strings.Repeat("A", 64*1024)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write([]byte(body))
+	}))
+	defer srv.Close()
+
+	c := &ranger.Client{}
+	err := c.DoClientRequest(
+		context.Background(),
+		srv.Client(),
+		srv.URL,
+		&pingpong.PingRequest{},
+		&pingpong.PongReply{},
+	)
+
+	require.Error(t, err)
+	st, ok := status.FromError(err)
+	require.True(t, ok)
+	// The message must be bounded well below the body size, and flagged as cut.
+	assert.Less(t, len(st.Message()), len(body), "the oversized body must not be surfaced in full")
+	assert.LessOrEqual(t, len(st.Message()), 4*1024, "the message must stay bounded")
+	assert.Contains(t, st.Message(), "[truncated]", "a truncated message should be marked as such")
 }
