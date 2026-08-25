@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/go-openapi/spec"
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 )
 
 func New() *swaggerGen {
