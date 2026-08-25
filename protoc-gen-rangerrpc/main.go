@@ -4,8 +4,8 @@
 package main
 
 import (
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 	"go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc/generator"
 	"google.golang.org/protobuf/types/pluginpb"
 )
