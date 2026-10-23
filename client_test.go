@@ -69,8 +69,8 @@ func TestDoClientRequestNonProtoErrorBody(t *testing.T) {
 	const body = "<html><head><title>502 Bad Gateway</title></head><body>upstream connect error</body></html>"
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 502 is not in the reverse status map, so it maps to codes.Unknown,
-		// and an HTML body cannot be decoded as a proto Status.
+		// 502 maps to codes.Unavailable, and an HTML body cannot be decoded
+		// as a proto Status.
 		w.WriteHeader(http.StatusBadGateway)
 		_, _ = w.Write([]byte(body))
 	}))
@@ -88,7 +88,7 @@ func TestDoClientRequestNonProtoErrorBody(t *testing.T) {
 	require.Error(t, err)
 	st, ok := status.FromError(err)
 	require.True(t, ok)
-	assert.Equal(t, codes.Unknown, st.Code(), "502 with a non-proto body maps to Unknown")
+	assert.Equal(t, codes.Unavailable, st.Code(), "502 with a non-proto body maps to Unavailable")
 	assert.NotEmpty(t, st.Message(), "the upstream error body must be surfaced, not dropped as an empty description")
 	assert.Contains(t, st.Message(), "502 Bad Gateway", "the description should carry the upstream error body")
 }
@@ -118,7 +118,7 @@ func TestDoClientRequestEmptyErrorBody(t *testing.T) {
 	require.Error(t, err, "a non-200 with an empty body must not be swallowed as success")
 	st, ok := status.FromError(err)
 	require.True(t, ok)
-	assert.Equal(t, codes.Unknown, st.Code(), "502 maps to Unknown")
+	assert.Equal(t, codes.Unavailable, st.Code(), "502 maps to Unavailable")
 	assert.NotEmpty(t, st.Message(), "an empty body should fall back to the HTTP status line, not an empty description")
 	assert.Contains(t, st.Message(), "502", "the HTTP status line should be surfaced when the body is empty")
 }

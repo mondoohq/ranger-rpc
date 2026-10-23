@@ -51,6 +51,11 @@ func init() {
 		http.StatusInternalServerError: codes.Internal,
 		http.StatusServiceUnavailable:  codes.Unavailable,
 		http.StatusNotImplemented:      codes.Unimplemented,
+		// 502 and 504 almost always come from a proxy or load balancer, not
+		// the service (which sends a proto status). gRPC maps both to
+		// Unavailable too, so callers can retry them.
+		http.StatusBadGateway:     codes.Unavailable,
+		http.StatusGatewayTimeout: codes.Unavailable,
 	}
 }
 
