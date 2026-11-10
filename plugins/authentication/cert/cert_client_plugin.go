@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	jose "github.com/go-jose/go-jose/v3"
-	jwt "github.com/go-jose/go-jose/v3/jwt"
+	jose "github.com/go-jose/go-jose/v4"
+	jwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
@@ -88,7 +88,7 @@ func (cap *certAuthenticationClientPlugin) Sign(signature []byte) (string, error
 		return "", err
 	}
 
-	bearer, err := jwt.Signed(sig).Claims(cl).Claims(customClaims).CompactSerialize()
+	bearer, err := jwt.Signed(sig).Claims(cl).Claims(customClaims).Serialize()
 	if err != nil {
 		return "", err
 	}

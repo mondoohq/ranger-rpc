@@ -13,7 +13,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	jwt "github.com/go-jose/go-jose/v3/jwt"
+	jose "github.com/go-jose/go-jose/v4"
+	jwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/header"
@@ -114,7 +115,7 @@ type CertJWTVerifier struct {
 }
 
 func (v *CertJWTVerifier) Validate(rawToken string, dest *user.Claims) error {
-	tok, err := jwt.ParseSigned(rawToken)
+	tok, err := jwt.ParseSigned(rawToken, []jose.SignatureAlgorithm{jose.ES384})
 	if err != nil {
 		return err
 	}
@@ -144,7 +145,9 @@ func (v *CertJWTVerifier) Validate(rawToken string, dest *user.Claims) error {
 		return err
 	}
 
-	err = out.Validate(v.Expected.WithTime(time.Now()))
+	expected := v.Expected
+	expected.Time = time.Now()
+	err = out.Validate(expected)
 	if err != nil {
 		return err
 	}

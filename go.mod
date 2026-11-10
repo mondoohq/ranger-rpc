@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/cockroachdb/errors v1.14.0
-	github.com/go-jose/go-jose/v3 v3.0.5
+	github.com/go-jose/go-jose/v4 v4.1.9
 	github.com/go-openapi/spec v0.22.9
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
