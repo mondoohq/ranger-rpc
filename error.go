@@ -6,12 +6,15 @@ package ranger
 import (
 	"io"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -53,8 +56,29 @@ func HttpError(span trace.Span, w http.ResponseWriter, req *http.Request, err er
 	// NOTE: we ignore the error here since its already an error that we return
 	payload, contentType, _ := convertProtoToPayload(s.Proto(), accept)
 	h.Set("Content-Type", contentType)
+	if secs, ok := retryAfterSeconds(s); ok {
+		h.Set("Retry-After", strconv.FormatInt(secs, 10))
+	}
 	w.WriteHeader(status)
 	w.Write(payload)
+}
+
+// retryAfterSeconds returns the delay of a google.rpc.RetryInfo detail in whole
+// seconds, rounded up, so HTTP clients that don't parse the status body still
+// learn when to retry.
+func retryAfterSeconds(s *status.Status) (int64, bool) {
+	for _, d := range s.Details() {
+		ri, ok := d.(*errdetails.RetryInfo)
+		if !ok || ri.GetRetryDelay() == nil {
+			continue
+		}
+		delay := ri.GetRetryDelay().AsDuration()
+		if delay <= 0 {
+			return 0, false
+		}
+		return int64((delay + time.Second - 1) / time.Second), true
+	}
+	return 0, false
 }
 
 // parseStatus tries to parse the proto Status from the body of the response.
